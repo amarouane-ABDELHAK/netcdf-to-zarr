@@ -7,14 +7,9 @@ This repository contains code for converting NetCDF files to Zarr stores. Basic 
 ### List of Files
 
 ```python
-import zarr
-from netCDF4 import Dataset
-
-from convert import netcdf_to_zarr
-
-ds_1, ds_2 = 'path_to_ds_1.nc', 'path_to_ds_2.nc'
-store = zarr.DirectoryStore('store.zarr')
-netcdf_to_zarr([ds_1, ds_2], store, 'Time')
+from netcdf_to_zarr import NetCDFToZarr
+netcdf_to_zarr = NetCDFToZarr()
+netcdf_to_zarr.netcdf_to_zarr("<path_to_necdf_file>")
 ```
 
 ### List of Files in S3
