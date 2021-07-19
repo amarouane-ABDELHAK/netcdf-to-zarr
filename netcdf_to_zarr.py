@@ -68,9 +68,9 @@ class NetCDFToZarr:
         threads = []
         for name, _ in dataset.dimensions.items():
             t = threading.Thread(target=self.__set_dim, args=(dataset, group, name,))
-
             threads.append(t)
-        [(t.start(), t.join()) for t in threads]
+            t.start()
+        [t.join() for t in threads]
         threads = []
     
 
@@ -95,7 +95,8 @@ class NetCDFToZarr:
         for name, _ in ds.variables.items():
             t =  threading.Thread(target=self.__set_var, args=(ds, group, name,))
             threads.append(t)
-        [(t.start(), t.join()) for t in threads]
+            t.start()
+        [t.join()for t in threads]
         threads = []
 
 
