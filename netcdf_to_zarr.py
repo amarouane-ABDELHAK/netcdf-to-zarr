@@ -10,27 +10,12 @@ import threading
 logging.getLogger().setLevel(logging.INFO)
 
 
-    
-# def set_dim(ds, group, name):
-#     logging.info("Set dim")
-#     dim = ds.dimensions[name]
-#     group.create_dataset(name, \
-#             data=np.arange(dim.size), \
-#             shape=(dim.size,), \
-#             chunks=(1<<16,) if dim.isunlimited() else (dim.size,), \
-#             dtype=np.int32 \
-#     )
-#         # Set dimension attrs
-#     group[name].attrs['_ARRAY_DIMENSIONS'] = [name]
-
-
-
-
 class NetCDFToZarr:
     def __init__(self) -> None:
         pass
     def netcdf_to_zarr(self, netcdf_path, store = None):
         store = store or f"{os.path.basename(netcdf_path)}.zarr"
+        store = zarr.DirectoryStore(store)
         root = zarr.group(store=store, overwrite = True)  
         ds = Dataset(netcdf_path)
         self.__set_meta(ds,root)
@@ -78,12 +63,13 @@ class NetCDFToZarr:
     @staticmethod
     def __set_dim(ds, group, name):
         logging.info("Set dim")
+        var = ds.variables[name]
         dim = ds.dimensions[name]
         group.create_dataset(name, \
             data=np.arange(dim.size), \
             shape=(dim.size,), \
             chunks=(1<<16,) if dim.isunlimited() else (dim.size,), \
-            dtype=np.int32 \
+            dtype=getattr(np, str(var.dtype)) \
     )
         # Set dimension attrs
         group[name].attrs['_ARRAY_DIMENSIONS'] = [name]
@@ -105,12 +91,16 @@ class NetCDFToZarr:
     def __set_var(self, ds, group, name):
         logging.info("Setting " + name)
         var = ds.variables[name]
-        group.create_dataset(name, \
+
+        try:
+            group.require_dataset(name, \
             data=var, \
             shape=var.shape, \
             chunks=(self.__get_var_chunks(var, 2<<24)), \
-            dtype=var.dtype \
+            dtype= getattr(np, str(var.dtype)) \
     )
+        except Exception as ex:
+            print(f"Can't process {name} because {var.dtype}: {ex}")
         attrs = self.__dsattrs(var)
         attrs['_ARRAY_DIMENSIONS'] = list(var.dimensions)
         group[name].attrs.put(attrs)
@@ -129,4 +119,4 @@ class NetCDFToZarr:
 
 if __name__ == "__main__":
     netcdf_to_zarr = NetCDFToZarr()
-    netcdf_to_zarr.netcdf_to_zarr("/home/amarouane/Downloads/IMPACTS_sounding_20200220_2259_NCSU.nc")
+    netcdf_to_zarr.netcdf_to_zarr("/home/amarouane/Downloads/f13_ssmi_20091102v7.nc")
