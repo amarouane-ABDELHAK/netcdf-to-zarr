@@ -6,6 +6,7 @@ import numpy as np
 from concurrent.futures import ProcessPoolExecutor
 import math
 import threading
+import s3fs
 
 logging.getLogger().setLevel(logging.INFO)
 
@@ -13,10 +14,21 @@ logging.getLogger().setLevel(logging.INFO)
 class NetCDFToZarr:
     def __init__(self) -> None:
         pass
-    def netcdf_to_zarr(self, netcdf_path, store = None):
-        store = store or f"{os.path.basename(netcdf_path)}.zarr"
-        store = zarr.DirectoryStore(store)
-        root = zarr.group(store=store, overwrite = True)  
+    def __get_zarr_directory_store(self,store_name, s3=False, **kwargs):
+        if s3:
+            region = kwargs.get('region', 'us-west-2')
+            endpoint_url = kwargs.get('endpoint_url')
+            bucket_name = kwargs.get('bucket_name')
+            s3 = s3fs.S3FileSystem(anon=False, client_kwargs=dict(region_name=region, endpoint_url=endpoint_url))
+            store = s3fs.S3Map(root=f"{bucket_name}/{store_name}", s3=s3, check=False)
+            cache = zarr.LRUStoreCache(store, max_size=2**28)
+            return zarr.group(store=cache, overwrite = True)
+        store = zarr.DirectoryStore(store_name)
+        return zarr.group(store=store, overwrite = True)  
+
+    def netcdf_to_zarr(self, netcdf_path, store = None, s3=False, **kwargs):
+        store_name = store or f"{os.path.basename(netcdf_path)}.zarr"
+        root = self.__get_zarr_directory_store(store_name, s3=s3, **kwargs)
         ds = Dataset(netcdf_path)
         self.__set_meta(ds,root)
         self.__set_dims(ds,root)
@@ -62,10 +74,10 @@ class NetCDFToZarr:
 
     @staticmethod
     def __set_dim(ds, group, name):
-        logging.info("Set dim")
+        logging.info(f"Set dim {name}")
         var = ds.variables[name]
         dim = ds.dimensions[name]
-        group.create_dataset(name, \
+        group.require_dataset(name, \
             data=np.arange(dim.size), \
             shape=(dim.size,), \
             chunks=(1<<16,) if dim.isunlimited() else (dim.size,), \
@@ -119,4 +131,4 @@ class NetCDFToZarr:
 
 if __name__ == "__main__":
     netcdf_to_zarr = NetCDFToZarr()
-    netcdf_to_zarr.netcdf_to_zarr("/home/amarouane/Downloads/IMPACTS_sounding_20200220_2259_NCSU.nc")
+    netcdf_to_zarr.netcdf_to_zarr("/home/amarouane/Downloads/f13_ssmi_20091102v7.nc", s3=True, endpoint_url="http://localhost:4566", bucket_name="amarouane")
