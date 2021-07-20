@@ -119,4 +119,4 @@ class NetCDFToZarr:
 
 if __name__ == "__main__":
     netcdf_to_zarr = NetCDFToZarr()
-    netcdf_to_zarr.netcdf_to_zarr("/home/amarouane/Downloads/f13_ssmi_20091102v7.nc")
+    netcdf_to_zarr.netcdf_to_zarr("/home/amarouane/Downloads/IMPACTS_sounding_20200220_2259_NCSU.nc")
