@@ -3,7 +3,6 @@ import os
 import logging
 from netCDF4 import Dataset
 import numpy as np
-from concurrent.futures import ProcessPoolExecutor
 import math
 import threading
 import s3fs
@@ -131,4 +130,4 @@ class NetCDFToZarr:
 
 if __name__ == "__main__":
     netcdf_to_zarr = NetCDFToZarr()
-    netcdf_to_zarr.netcdf_to_zarr("/home/amarouane/Downloads/f13_ssmi_20091102v7.nc", s3=True, endpoint_url="http://localhost:4566", bucket_name="amarouane")
+    netcdf_to_zarr.netcdf_to_zarr("/home/amarouane/Downloads/f13_ssmi_20091102v7.nc", s3=True, endpoint_url="http://localhost:4566", bucket_name="amarouane/yuey")

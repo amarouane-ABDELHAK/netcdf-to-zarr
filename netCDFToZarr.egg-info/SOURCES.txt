@@ -1,0 +1,7 @@
+README.md
+setup.py
+netCDFToZarr.egg-info/PKG-INFO
+netCDFToZarr.egg-info/SOURCES.txt
+netCDFToZarr.egg-info/dependency_links.txt
+netCDFToZarr.egg-info/requires.txt
+netCDFToZarr.egg-info/top_level.txt
